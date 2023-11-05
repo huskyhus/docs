@@ -8,6 +8,7 @@ TypeScript のコードは、開発者がソースコードを書く段階で型
     - [Node.js](#nodejs)
     - [nvm](#nvm)
     - [npm](#npm)
+    - [npx](#npx)
     - [package.json](#packagejson)
     - [package-lock.json](#package-lockjson)
     - [node_modules](#node_modules)
@@ -52,6 +53,10 @@ npm は、パッケージのインストール、アンインストール、更�
 npm は、Node.js コミュニティで広く使用されており、数多くのモジュールやパッケージが npm のデータベースで公開されています。これにより、開発者は自分のプロジェクトに必要な機能や機能拡張を簡単に見つけて導入することができます。
 
 なお、現在`npm`の他に`yarn`や`pnpm`等のパッケージマネージャがある。
+
+### npx
+
+npx は、npm パッケージを実行するためのコマンドラインツールです。npx を使うと、単にローカルに存在するパッケージを実行する他に、npm レジストリからパッケージを一時的にダウンロードして実行することもできます。
 
 ### package.json
 
@@ -195,7 +200,7 @@ cd helloworld
 mkdir src
 
 npm init -y
-npm install typescript @types/node --save-dev
+npm i -D typescript @types/node
 npx tsc --init
 
 cd src
@@ -241,14 +246,91 @@ cd ../
 
 を導入する手順を紹介する。
 
-```bash
-npm install eslint --save-dev
-npx eslint --init
+まず、ESLint, Prettier を設定する。対話的な設定は自然なものを選ぶ。（この際、自動的に必要な devDependencies がインストールされる。）
 
-npm install prettier eslint-config-prettier --save-dev
+```bash
+npm i -D eslint prettier eslint-config-prettier
+npx eslint --init
 ```
 
-TODO:　ここから
+`.eslintrc.json`が作成されるが、自分の都合のいいように書き換える。この時、`extends`の最後尾に`"prettier"`を付加する。一例では、
+
+```json
+{
+  "env": {
+    "es2021": true,
+    "node": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "plugins": ["@typescript-eslint"],
+  "rules": {
+    "indent": ["error", 2],
+    "linebreak-style": ["error", "windows"],
+    "quotes": ["error", "double"],
+    "semi": ["error", "always"]
+  },
+  "ignorePatterns": ["dist/**/*.js", "dist/**/*.jsx"]
+}
+```
+
+また、`.prettierrc.json`を作成し、自分の都合のいいように書く。一例では、
+
+```json
+{
+  "printWidth": 80,
+  "tabWidth": 2,
+  "semi": true,
+  "singleQuote": false,
+  "trailingComma": "es5",
+  "endOfLine": "crlf"
+}
+```
+
+明示的にリント・フォーマットをしたい場合のために`package.json`に以下を追記する。
+
+```json
+{
+  "scripts": {
+    "lint": "eslint ./src/ --fix",
+    "fmt": "prettier ./src/ --write"
+  }
+}
+```
+
+ここからは、git hooks の管理用ライブラリである`husky`、commit 時の自動検証ライブラリである`lint-staged`を導入する。
+
+```bash
+git init
+echo /node_modules > .gitignore
+
+npx husky-init
+npm i
+```
+
+この時点で git hooks path が書き換えられていることに注意する。（`.husky`ディレクトリのシェルスクリプトが参照されるようになっている。）
+`.husky/pre-commit`シェルスクリプトの末尾にコマンドが書かれていることを確認する。これは`npx husky add`あるいは`npx husky set`を用いて変更できる。逆に言えば、husky はこの程度の機能のみを提供している。）
+
+```bash
+npm i -D lint-staged
+npx husky set .husky/pre-commit "npx lint-staged"
+```
+
+`package.json`に以下を追記する。なお、lint-staged は非同期で各ファイルに対して操作を行うため、複数の glob パターンが同一のファイルにマッチし、かつ書き込み操作が行われる場合競合する可能性があるため注意する。なお、以下で`"/src/**/*.{ts, tsx}"`と書くと認識しないので注意。
+
+```json
+"lint-staged": {
+    "src/**/*.{ts, tsx}": ["eslint --fix", "prettier --write"]
+  }
+```
 
 ---
 
