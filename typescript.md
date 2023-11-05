@@ -203,9 +203,7 @@ npm init -y
 npm i -D typescript @types/node
 npx tsc --init
 
-cd src
 touch src/index.ts
-cd ../
 ```
 
 `package.json`に以下を追加。
