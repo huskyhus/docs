@@ -322,11 +322,10 @@ npm i -D lint-staged
 npx husky set .husky/pre-commit "npx lint-staged"
 ```
 
-`package.json`に以下を追記する。なお、lint-staged は非同期で各ファイルに対して操作を行うため、複数の glob パターンが同一のファイルにマッチし、かつ書き込み操作が行われる場合競合する可能性があるため注意する。なお、以下で`"/src/**/*.{ts, tsx}"`と書くと認識しないので注意。
-
+`package.json`に以下を追記する。なお、lint-staged は非同期で各ファイルに対して操作を行うため、複数の glob パターンが同一のファイルにマッチし、かつ書き込み操作が行われる場合競合する可能性があるため注意する。
 ```json
 "lint-staged": {
-    "src/**/*.{ts, tsx}": ["eslint --fix", "prettier --write"]
+    "./src/**/*.{ts, tsx}": ["eslint --fix", "prettier --write"]
   }
 ```
 
