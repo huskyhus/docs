@@ -204,7 +204,7 @@ npm i -D typescript @types/node
 npx tsc --init
 
 cd src
-echo console.log("Hello, World!"); > index.ts
+touch src/index.ts
 cd ../
 ```
 
