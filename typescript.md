@@ -27,10 +27,18 @@ TypeScript のコードは、開発者がソースコードを書く段階で型
     - [Node.js 推奨環境構築手順](#nodejs-推奨環境構築手順)
   - [ライブラリ・フレームワーク紹介](#ライブラリフレームワーク紹介)
     - [フロントエンド開発](#フロントエンド開発)
+  - [React](#react)
+  - [Next.js](#nextjs)
+  - [Bootstrap](#bootstrap)
+  - [Prisma](#prisma)
+  - [状態管理](#状態管理)
+  - [データフェッチ](#データフェッチ)
     - [バックエンド開発](#バックエンド開発)
     - [ORM](#orm)
     - [テスト](#テスト)
+    - [モバイル](#モバイル)
   - [言語仕様](#言語仕様)
+  - [参考文献](#参考文献)
 
 ---
 
@@ -323,6 +331,7 @@ npx husky set .husky/pre-commit "npx lint-staged"
 ```
 
 `package.json`に以下を追記する。なお、lint-staged は非同期で各ファイルに対して操作を行うため、複数の glob パターンが同一のファイルにマッチし、かつ書き込み操作が行われる場合競合する可能性があるため注意する。
+
 ```json
 "lint-staged": {
     "./src/**/*.{ts, tsx}": ["eslint --fix", "prettier --write"]
@@ -335,13 +344,147 @@ npx husky set .husky/pre-commit "npx lint-staged"
 
 ### フロントエンド開発
 
+TODO: ここから
+
+## React
+
+React は、Facebook 社が開発したオープンソースのプロジェクトで、コンポーネントベースで Web アプリケーション（特に UI）を開発することができるようになる JavaScript ライブラリです。
+React component は、React における再利用可能で自己完結的な UI 要素のことです。React component は React hooks を用いることで状態管理や副作用を実現することができます。
+
+具体的には、
+
+- `useState`により状態管理を行う
+- `useEffect`により副作用を表現する
+
+といった記述が可能です。
+
+React component や React hooks を用いるような、"React 風"の記述を採用することで、コードの可読性や再利用性が高まります。現在、React は Vue と並んで Web 開発の 2 大勢力を成しています。
+
+---
+
+## Next.js
+
+[Next.js](https://nextjs.org/)は、Vercel 社が開発したオープンソースのプロジェクトで、サーバーサイドレンダリングやルーティング、最適化などの機能を提供する、React による Web アプリケーションを構築するためのフルスタックフレームワークです。
+
+## Bootstrap
+
+[Bootstrap](https://getbootstrap.jp/)は、Twitter 社が開発したオープンソースのプロジェクトで、Web アプリケーションの開発においてよく使用されるテンプレートを、一貫したデザインで用いることができるフロントエンドのフレームワークです。
+
+[React Bootstrap](https://react-bootstrap.netlify.app/)は、Bootstrap の提供する UI を React コンポーネントとして利用できるようになるライブラリです。
+
+React Bootstrap を Next.js に組み込むために、`global.css`に以下の記述が必要です。
+
+```css
+@import "bootstrap/dist/css/bootstrap.min.css";
+```
+
+React Bootstrap のコンポーネントを Next.js で使うためには、`"use client";`指定が必要です。
+
+---
+
+## Prisma
+
+[Prisma](https://www.prisma.io/)は、ORM です。
+
+説明のため、簡単な構成を見ましょう。
+`compose.yaml`
+
+```yaml
+services:
+  db:
+    image: postgres:16.0
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+    volumes:
+      - lifehax_db_volume:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer:4.8.1
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DESIGN: ng9
+      ADMINER_DEFAULT: db
+
+volumes:
+  lifehax_db_volume:
+```
+
+`.env`
+
+```
+# database secrets
+
+DATABASE_URL="postgresql://XXXX:YYYYd@localhost:5432/ZZZZ?schema=public"
+
+POSTGRES_USER="XXXX"
+POSTGRES_PASSWORD="YYYY"
+POSTGRES_DB="ZZZZ"
+```
+
+Prisma CLI をインストールし、`prisma/schema.prisma`の作成を行う。
+
+```bash
+npm install prisma --save-dev
+npx prisma init
+```
+
+- すでにデータベースがある場合
+  以下のコマンドで`prisma/schema.prisma`を作成する。
+
+  ```bash
+  npx prisma db pull
+  ```
+
+- 空のデータベースの場合
+  `prisma/schema.prisma`に記述をする。
+
+  ```prisma
+  model User {
+    id      Int      @default(autoincrement()) @id
+    email   String   @unique
+    name    String?
+  }
+  ```
+
+  以下のコマンドを実行する。 `--name`オプションでマイグレーション操作に名前が付けられる。
+
+  ```bash
+  npx prisma migrate dev --name init
+  ```
+
+  なお、このコマンドは`prisma/schema.prisma`を変更するたびに行う。
+
+---
+
+## 状態管理
+
+React における状態管理は、`useState`や`useContext`のような React hook を用いることが一般的ですが、複雑な場合は`Redux`や`RTK(Redux Toolkit)`のようなライブラリを使用することもあります。
+
+`Redux`は大規模なアプリケーションの状態管理に向いており、小規模な場合は React hook で管理するのがベストプラクティスだと言われます。
+
+## データフェッチ
+
+標準の`fetch()`関数のほか、`axios`のようなライブラリを用いて HTTP リクエスト（`GET`, `POST`など）を書くことができます。
+
+データフェッチに対するキャッシュ管理や再フェッチの管理などのために、[SWR](https://swr.vercel.app/ja)が使われることがよくあります。
+
+`Redux`で状態管理をしている場合、`RTK Query`はデータフェッチとキャッシングのための最良の選択となる可能性があります。
+
+---
+
 React、あるいは React フレームワークである Next.js を使用する場合、
 
 - `npx create-react-app`
 - `npx create-next-app`
 
-から構築するのが容易である。なお、React の競合フレームワークで Vue、そのフレームワークで Nuxt.js というものがある。
-いずれにせよ、個々のサイトの
+から構築するのが容易である。なお、React の競合フレームワークで Vue、そのフレームワークで Nuxt.js というものがある。ほかにも Angular は有名なフロント開発フレームワークである。
 
 ### バックエンド開発
 
@@ -353,8 +496,21 @@ Prisma、あるいは TypeORM などがある。
 
 ### テスト
 
-Jest が有名。
+- Jest
+- storybook (UI test)
+- Playwright (E2E test)
+
+### モバイル
+
+- React Native
 
 ---
 
 ## 言語仕様
+
+## 参考文献
+
+- プログラミング TypeScript スケールする JavaScript アプリケーション開発
+
+- React ハンズオンラーニング Web アプリケーション開発のベストプラクティス
+-
